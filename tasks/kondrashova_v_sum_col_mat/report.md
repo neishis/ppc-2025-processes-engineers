@@ -167,7 +167,7 @@
 ## 10. Приложение
 
 ### MPI-реализация(ключевой алгоритм)
-
+```cpp
 bool KondrashovaVSumColMatMPI::RunImpl() {
   int rank = 0;
   int size = 0;
