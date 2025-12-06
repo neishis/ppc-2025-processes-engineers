@@ -198,3 +198,4 @@ bool KondrashovaVSumColMatMPI::RunImpl() {
 
   return true;
 }
+```
