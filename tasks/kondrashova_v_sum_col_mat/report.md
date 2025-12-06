@@ -163,3 +163,38 @@
 1. Список лекций по курсу "Параллельное программирование". (Сысоев А.В. ННГУ 2025 г.)
 2. Список практических занятий по курсу "Пареллельное программирование". (Оболенский А.А, ННГУ 2025 г.)
 3. Документация по курсу: "Параллельное программирование": <https://learning-process.github.io/parallel_programming_course/ru/index.html> (Оболенский А.А, Нестеров А.Ю)
+
+## 10. Приложение
+
+### MPI-реализация(ключевой алгоритм)
+
+bool KondrashovaVSumColMatMPI::RunImpl() {
+  int rank = 0;
+  int size = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+  const int cols_on_proc = cols_ / size;
+  const int ost = cols_ % size;
+
+  int first_col = 0;
+  int end_col = 0;
+  ComputeLocalCols(rank, ost, cols_on_proc, first_col, end_col);
+
+  const int local_cols = end_col - first_col;
+
+  std::vector<int> matrix;
+  if (rank == 0) {
+    matrix.assign(GetInput().begin() + 2, GetInput().end());
+  } else {
+    matrix.resize(static_cast<size_t>(rows_) * static_cast<size_t>(cols_));
+  }
+
+  MPI_Bcast(matrix.data(), rows_ * cols_, MPI_INT, 0, MPI_COMM_WORLD);
+
+  std::vector<int> local_sums(static_cast<size_t>(local_cols), 0);
+  ComputeLocalSums(matrix, local_sums, rows_, cols_, first_col);
+  GatherSums(local_sums, first_col, local_cols, rank, size, GetOutput());
+
+  return true;
+}
