@@ -3,6 +3,8 @@
 #include "kondrashova_v_ring_topology/common/include/common.hpp"
 #include "task/include/task.hpp"
 
+#include <mpi.h>
+
 namespace kondrashova_v_ring_topology {
 
 class KondrashovaVRingTopologyMPI : public BaseTask {
@@ -10,6 +12,7 @@ class KondrashovaVRingTopologyMPI : public BaseTask {
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kMPI;
   }
+
   explicit KondrashovaVRingTopologyMPI(const InType &in);
 
  private:
@@ -20,3 +23,4 @@ class KondrashovaVRingTopologyMPI : public BaseTask {
 };
 
 }  // namespace kondrashova_v_ring_topology
+

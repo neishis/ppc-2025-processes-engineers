@@ -7,9 +7,17 @@
 
 namespace kondrashova_v_ring_topology {
 
-using InType = int;
-using OutType = int;
-using TestType = std::tuple<int, std::string>;
+struct Data {
+  int source;
+  int recipient;
+  std::vector<int> data;
+};
+
+using InType = Data;
+using OutType = std::vector<int>;
+
+using TestType = std::tuple<int, int, std::vector<int>, std::string>;
+
 using BaseTask = ppc::task::Task<InType, OutType>;
 
 }  // namespace kondrashova_v_ring_topology
