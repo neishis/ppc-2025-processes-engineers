@@ -1,4 +1,5 @@
 #include "kondrashova_v_ring_topology/seq/include/ops_seq.hpp"
+
 #include <mpi.h>
 
 #include <algorithm>
@@ -74,7 +75,7 @@ bool KondrashovaVRingTopologySEQ::RunImpl() {
   }
 
   int dims[1] = {world_size};
-  int periods[1] = {1}; 
+  int periods[1] = {1};
   int reorder = 0;
 
   MPI_Comm ring_comm;

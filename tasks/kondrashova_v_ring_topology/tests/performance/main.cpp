@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+
 #include <numeric>
 #include <vector>
 
@@ -41,13 +42,18 @@ class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InTy
     return true;
   }
 
-  InType GetTestInputData() final { return input_data; }
+  InType GetTestInputData() final {
+    return input_data;
+  }
 };
 
-TEST_P(KondrashovaVRunPerfTestProcesses, RunPerfModes) { ExecuteTest(GetParam()); }
+TEST_P(KondrashovaVRunPerfTestProcesses, RunPerfModes) {
+  ExecuteTest(GetParam());
+}
 
-const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, KondrashovaVRingTopologyMPI, KondrashovaVRingTopologySEQ>(
-    PPC_SETTINGS_kondrashova_v_ring_topology);
+const auto kAllPerfTasks =
+    ppc::util::MakeAllPerfTasks<InType, KondrashovaVRingTopologyMPI, KondrashovaVRingTopologySEQ>(
+        PPC_SETTINGS_kondrashova_v_ring_topology);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 

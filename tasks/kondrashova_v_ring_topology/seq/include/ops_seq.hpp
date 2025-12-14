@@ -1,9 +1,9 @@
 #pragma once
 
+#include <mpi.h>
+
 #include "kondrashova_v_ring_topology/common/include/common.hpp"
 #include "task/include/task.hpp"
-
-#include <mpi.h>
 
 namespace kondrashova_v_ring_topology {
 

@@ -9,7 +9,6 @@
 #include "kondrashova_v_ring_topology/common/include/common.hpp"
 #include "kondrashova_v_ring_topology/mpi/include/ops_mpi.hpp"
 #include "kondrashova_v_ring_topology/seq/include/ops_seq.hpp"
-
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
 
@@ -51,7 +50,9 @@ class KondrashovaVRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InT
     return true;
   }
 
-  InType GetTestInputData() final { return input_data; }
+  InType GetTestInputData() final {
+    return input_data;
+  }
 
  private:
   InType input_data;
@@ -60,10 +61,12 @@ class KondrashovaVRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InT
 
 namespace {
 
-TEST_P(KondrashovaVRunFuncTestsProcesses, RingTopologyTransfer) { ExecuteTest(GetParam()); }
+TEST_P(KondrashovaVRunFuncTestsProcesses, RingTopologyTransfer) {
+  ExecuteTest(GetParam());
+}
 
 const std::array<TestType, 6> kTestParam = {
-    
+
     std::make_tuple(0, 1, std::vector<int>{1, 2, 3, 4, 5}, "simple_transfer"),
     std::make_tuple(0, 3, std::vector<int>{10, 20, 30}, "first_to_third"),
 
@@ -75,9 +78,9 @@ const std::array<TestType, 6> kTestParam = {
 
     std::make_tuple(1, 3, std::vector<int>{-1, -2, -3, 0, 1, 2, 3}, "negative_numbers")};
 
-const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<KondrashovaVRingTopologyMPI, InType>(kTestParam, PPC_SETTINGS_kondrashova_v_ring_topology),
-                   ppc::util::AddFuncTask<KondrashovaVRingTopologySEQ, InType>(kTestParam, PPC_SETTINGS_kondrashova_v_ring_topology));
+const auto kTestTasksList = std::tuple_cat(
+    ppc::util::AddFuncTask<KondrashovaVRingTopologyMPI, InType>(kTestParam, PPC_SETTINGS_kondrashova_v_ring_topology),
+    ppc::util::AddFuncTask<KondrashovaVRingTopologySEQ, InType>(kTestParam, PPC_SETTINGS_kondrashova_v_ring_topology));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
