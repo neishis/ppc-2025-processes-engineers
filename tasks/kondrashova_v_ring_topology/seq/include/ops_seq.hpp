@@ -2,6 +2,8 @@
 
 #include <mpi.h>
 
+#include <vector>
+
 #include "kondrashova_v_ring_topology/common/include/common.hpp"
 #include "task/include/task.hpp"
 
@@ -24,9 +26,9 @@ class KondrashovaVRingTopologySEQ : public BaseTask {
   void BroadcastParameters(int rank, int &source, int &recipient, int &data_size);
   void PrepareData(int rank, int data_size, std::vector<int> &data);
   bool HandleTrivialCase(int rank, int world_size, int source, int recipient, const std::vector<int> &data);
-  void CreateRingTopology(int world_size, MPI_Comm &ring_comm);
-  void SendData(int rank, int sender, int next_rank, int step, int data_size, const std::vector<int> &data,
-                const std::vector<int> &buffer, MPI_Comm ring_comm);
+  static void CreateRingTopology(int world_size, MPI_Comm &ring_comm);
+  static void SendData(int rank, int sender, int next_rank, int step, int data_size, const std::vector<int> &data,
+                       const std::vector<int> &buffer, MPI_Comm ring_comm);
   void ReceiveData(int rank, int receiver, int prev_rank, int recipient, std::vector<int> &buffer, MPI_Comm ring_comm);
   void PerformRingTransfer(int rank, int world_size, int source, int recipient, int data_size,
                            const std::vector<int> &data);

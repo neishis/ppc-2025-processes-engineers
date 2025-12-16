@@ -9,8 +9,8 @@
 namespace kondrashova_v_ring_topology {
 
 struct Data {
-  int source;
-  int recipient;
+  int source = 0;
+  int recipient = 0;
   std::vector<int> data;
 };
 

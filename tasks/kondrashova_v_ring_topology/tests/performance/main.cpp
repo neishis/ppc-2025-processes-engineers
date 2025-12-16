@@ -25,7 +25,7 @@ class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InTy
     input_data_.recipient = world_size - 1;
 
     input_data_.data.resize(kDataSize);
-    std::iota(input_data_.data.begin(), input_data_.data.end(), 0);
+    std::ranges::iota(input_data_.data, 0);
 
     expected_output_ = input_data_.data;
   }
