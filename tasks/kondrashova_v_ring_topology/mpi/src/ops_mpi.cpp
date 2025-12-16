@@ -2,13 +2,10 @@
 
 #include <mpi.h>
 
-#include <algorithm>
 #include <cassert>
-#include <limits>
-#include <stdexcept>
+#include <vector>
 
 #include "kondrashova_v_ring_topology/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace kondrashova_v_ring_topology {
 
@@ -18,7 +15,8 @@ KondrashovaVRingTopologyMPI::KondrashovaVRingTopologyMPI(const InType &in) {
 }
 
 bool KondrashovaVRingTopologyMPI::ValidationImpl() {
-  int rank, world_size;
+  int rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
@@ -45,8 +43,47 @@ bool KondrashovaVRingTopologyMPI::PreProcessingImpl() {
   return true;
 }
 
+void KondrashovaVRingTopologyMPI::SendData(int rank, int sender, int receiver, int step, int data_size,
+                                           const std::vector<int> &data, const std::vector<int> &buffer) {
+  if (rank != sender) {
+    return;
+  }
+
+  if (step == 0) {
+    MPI_Send(&data_size, 1, MPI_INT, receiver, 0, MPI_COMM_WORLD);
+    if (data_size > 0) {
+      MPI_Send(data.data(), data_size, MPI_INT, receiver, 1, MPI_COMM_WORLD);
+    }
+  } else {
+    int buf_size = static_cast<int>(buffer.size());
+    MPI_Send(&buf_size, 1, MPI_INT, receiver, 0, MPI_COMM_WORLD);
+    if (buf_size > 0) {
+      MPI_Send(buffer.data(), buf_size, MPI_INT, receiver, 1, MPI_COMM_WORLD);
+    }
+  }
+}
+
+void KondrashovaVRingTopologyMPI::ReceiveData(int rank, int sender, int receiver, int recipient,
+                                              std::vector<int> &buffer) {
+  if (rank != receiver) {
+    return;
+  }
+
+  int recv_size = 0;
+  MPI_Recv(&recv_size, 1, MPI_INT, sender, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  buffer.resize(recv_size);
+  if (recv_size > 0) {
+    MPI_Recv(buffer.data(), recv_size, MPI_INT, sender, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  }
+
+  if (rank == recipient) {
+    GetOutput() = buffer;
+  }
+}
+
 bool KondrashovaVRingTopologyMPI::RunImpl() {
-  int rank, world_size;
+  int rank = 0;
+  int world_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
@@ -87,33 +124,8 @@ bool KondrashovaVRingTopologyMPI::RunImpl() {
     int sender = (source + step) % world_size;
     int receiver = (sender + 1) % world_size;
 
-    if (rank == sender) {
-      if (step == 0) {
-        MPI_Send(&data_size, 1, MPI_INT, receiver, 0, MPI_COMM_WORLD);
-        if (data_size > 0) {
-          MPI_Send(data.data(), data_size, MPI_INT, receiver, 1, MPI_COMM_WORLD);
-        }
-      } else {
-        int buf_size = static_cast<int>(buffer.size());
-        MPI_Send(&buf_size, 1, MPI_INT, receiver, 0, MPI_COMM_WORLD);
-        if (buf_size > 0) {
-          MPI_Send(buffer.data(), buf_size, MPI_INT, receiver, 1, MPI_COMM_WORLD);
-        }
-      }
-    }
-
-    if (rank == receiver) {
-      int recv_size = 0;
-      MPI_Recv(&recv_size, 1, MPI_INT, sender, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      buffer.resize(recv_size);
-      if (recv_size > 0) {
-        MPI_Recv(buffer.data(), recv_size, MPI_INT, sender, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      }
-
-      if (rank == recipient) {
-        GetOutput() = buffer;
-      }
-    }
+    SendData(rank, sender, receiver, step, data_size, data, buffer);
+    ReceiveData(rank, sender, receiver, recipient, buffer);
 
     MPI_Barrier(MPI_COMM_WORLD);
   }

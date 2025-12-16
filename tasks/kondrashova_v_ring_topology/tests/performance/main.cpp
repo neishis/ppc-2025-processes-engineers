@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <mpi.h>
 
 #include <numeric>
 #include <vector>
@@ -13,37 +14,37 @@ namespace kondrashova_v_ring_topology {
 class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
   static constexpr int kDataSize = 100000000;
 
-  InType input_data{};
-  OutType expected_output{};
+  InType input_data_;
+  OutType expected_output_;
 
   void SetUp() override {
-    int world_size;
+    int world_size = 0;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    input_data.source = 0;
-    input_data.recipient = world_size - 1;
+    input_data_.source = 0;
+    input_data_.recipient = world_size - 1;
 
-    input_data.data.resize(kDataSize);
-    std::iota(input_data.data.begin(), input_data.data.end(), 0);
+    input_data_.data.resize(kDataSize);
+    std::iota(input_data_.data.begin(), input_data_.data.end(), 0);
 
-    expected_output = input_data.data;
+    expected_output_ = input_data_.data;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    int rank;
+    int rank = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (rank == input_data.recipient) {
-      if (output_data.size() != expected_output.size()) {
+    if (rank == input_data_.recipient) {
+      if (output_data.size() != expected_output_.size()) {
         return false;
       }
-      return output_data == expected_output;
+      return output_data == expected_output_;
     }
     return true;
   }
 
   InType GetTestInputData() final {
-    return input_data;
+    return input_data_;
   }
 };
 

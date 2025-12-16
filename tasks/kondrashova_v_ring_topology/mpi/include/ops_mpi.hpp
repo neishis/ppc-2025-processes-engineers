@@ -1,7 +1,5 @@
 #pragma once
 
-#include <mpi.h>
-
 #include "kondrashova_v_ring_topology/common/include/common.hpp"
 #include "task/include/task.hpp"
 
@@ -20,6 +18,9 @@ class KondrashovaVRingTopologyMPI : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
+  void SendData(int rank, int sender, int receiver, int step, int data_size, const std::vector<int> &data,
+                const std::vector<int> &buffer);
+  void ReceiveData(int rank, int sender, int receiver, int recipient, std::vector<int> &buffer);
 };
 
 }  // namespace kondrashova_v_ring_topology
