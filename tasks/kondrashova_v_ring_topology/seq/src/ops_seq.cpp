@@ -16,7 +16,7 @@ bool KondrashovaVRingTopologySEQ::ValidationImpl() {
   if (input.source < 0 || input.recipient < 0) {
     return false;
   }
-  
+
   return true;
 }
 
@@ -27,15 +27,14 @@ bool KondrashovaVRingTopologySEQ::PreProcessingImpl() {
 
 bool KondrashovaVRingTopologySEQ::RunImpl() {
   const auto &input = GetInput();
-  
+
   GetOutput() = input.data;
-  
+
   return true;
 }
 
 bool KondrashovaVRingTopologySEQ::PostProcessingImpl() {
   return true;
 }
-
 
 }  // namespace kondrashova_v_ring_topology

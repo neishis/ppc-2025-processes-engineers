@@ -23,8 +23,12 @@ class KondrashovaVRingTopologySEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  InType &GetInput() { return input_; }
-  OutType &GetOutput() { return output_; }
+  InType &GetInput() {
+    return input_;
+  }
+  OutType &GetOutput() {
+    return output_;
+  }
 
   InType input_;
   OutType output_;
