@@ -23,15 +23,11 @@ class KondrashovaVRingTopologySEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  void BroadcastParameters(int rank, int &source, int &recipient, int &data_size);
-  void PrepareData(int rank, int data_size, std::vector<int> &data);
-  bool HandleTrivialCase(int rank, int world_size, int source, int recipient, const std::vector<int> &data);
-  static void CreateRingTopology(int world_size, MPI_Comm &ring_comm);
-  static void SendData(int rank, int sender, int next_rank, int step, int data_size, const std::vector<int> &data,
-                       const std::vector<int> &buffer, MPI_Comm ring_comm);
-  void ReceiveData(int rank, int receiver, int prev_rank, int recipient, std::vector<int> &buffer, MPI_Comm ring_comm);
-  void PerformRingTransfer(int rank, int world_size, int source, int recipient, int data_size,
-                           const std::vector<int> &data);
+  InType &GetInput() { return input_; }
+  OutType &GetOutput() { return output_; }
+
+  InType input_;
+  OutType output_;
 };
 
 }  // namespace kondrashova_v_ring_topology
