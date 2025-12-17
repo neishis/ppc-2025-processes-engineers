@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <mpi.h>
 
-#include <numeric>
 #include <vector>
 
 #include "kondrashova_v_ring_topology/common/include/common.hpp"
@@ -25,7 +24,9 @@ class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InTy
     input_data_.recipient = world_size - 1;
 
     input_data_.data.resize(kDataSize);
-    std::ranges::iota(input_data_.data, 0);
+    for (int i = 0; i < kDataSize; ++i) {
+    input_data_.data[i] = i;
+}
 
     expected_output_ = input_data_.data;
   }

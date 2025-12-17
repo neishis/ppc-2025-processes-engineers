@@ -1,7 +1,5 @@
 #include "kondrashova_v_ring_topology/seq/include/ops_seq.hpp"
 
-#include <vector>
-
 #include "kondrashova_v_ring_topology/common/include/common.hpp"
 
 namespace kondrashova_v_ring_topology {
@@ -13,11 +11,7 @@ KondrashovaVRingTopologySEQ::KondrashovaVRingTopologySEQ(const InType &in) {
 
 bool KondrashovaVRingTopologySEQ::ValidationImpl() {
   const auto &input = GetInput();
-  if (input.source < 0 || input.recipient < 0) {
-    return false;
-  }
-
-  return true;
+  return !(input.source < 0 || input.recipient < 0);
 }
 
 bool KondrashovaVRingTopologySEQ::PreProcessingImpl() {
