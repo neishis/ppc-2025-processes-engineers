@@ -11,7 +11,7 @@ KondrashovaVRingTopologySEQ::KondrashovaVRingTopologySEQ(const InType &in) {
 
 bool KondrashovaVRingTopologySEQ::ValidationImpl() {
   const auto &input = GetInput();
-  return !(input.source < 0 || input.recipient < 0);
+  return !(input.source >= 0 && input.recipient >= 0);
 }
 
 bool KondrashovaVRingTopologySEQ::PreProcessingImpl() {

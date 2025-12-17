@@ -25,8 +25,8 @@ class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InTy
 
     input_data_.data.resize(kDataSize);
     for (int i = 0; i < kDataSize; ++i) {
-    input_data_.data[i] = i;
-}
+      input_data_.data[i] = i;
+    }
 
     expected_output_ = input_data_.data;
   }
