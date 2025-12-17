@@ -10,22 +10,22 @@
 
 namespace kondrashova_v_gauss_filter_vertical_split {
 
-NesterovATestTaskMPI::NesterovATestTaskMPI(const InType &in) {
+KondrashovaVGaussFilterVerticalSplitMPI::KondrashovaVGaussFilterVerticalSplitMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
 }
 
-bool NesterovATestTaskMPI::ValidationImpl() {
+bool KondrashovaVGaussFilterVerticalSplitMPI::ValidationImpl() {
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-bool NesterovATestTaskMPI::PreProcessingImpl() {
+bool KondrashovaVGaussFilterVerticalSplitMPI::PreProcessingImpl() {
   GetOutput() = 2 * GetInput();
   return GetOutput() > 0;
 }
 
-bool NesterovATestTaskMPI::RunImpl() {
+bool KondrashovaVGaussFilterVerticalSplitMPI::RunImpl() {
   auto input = GetInput();
   if (input == 0) {
     return false;
@@ -64,7 +64,7 @@ bool NesterovATestTaskMPI::RunImpl() {
   return GetOutput() > 0;
 }
 
-bool NesterovATestTaskMPI::PostProcessingImpl() {
+bool KondrashovaVGaussFilterVerticalSplitMPI::PostProcessingImpl() {
   GetOutput() -= GetInput();
   return GetOutput() > 0;
 }

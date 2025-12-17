@@ -8,22 +8,22 @@
 
 namespace kondrashova_v_gauss_filter_vertical_split {
 
-NesterovATestTaskSEQ::NesterovATestTaskSEQ(const InType &in) {
+KondrashovaVGaussFilterVerticalSplitSEQ::KondrashovaVGaussFilterVerticalSplitSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
 }
 
-bool NesterovATestTaskSEQ::ValidationImpl() {
+bool KondrashovaVGaussFilterVerticalSplitSEQ::ValidationImpl() {
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-bool NesterovATestTaskSEQ::PreProcessingImpl() {
+bool KondrashovaVGaussFilterVerticalSplitSEQ::PreProcessingImpl() {
   GetOutput() = 2 * GetInput();
   return GetOutput() > 0;
 }
 
-bool NesterovATestTaskSEQ::RunImpl() {
+bool KondrashovaVGaussFilterVerticalSplitSEQ::RunImpl() {
   if (GetInput() == 0) {
     return false;
   }
@@ -52,7 +52,7 @@ bool NesterovATestTaskSEQ::RunImpl() {
   return GetOutput() > 0;
 }
 
-bool NesterovATestTaskSEQ::PostProcessingImpl() {
+bool KondrashovaVGaussFilterVerticalSplitSEQ::PostProcessingImpl() {
   GetOutput() -= GetInput();
   return GetOutput() > 0;
 }

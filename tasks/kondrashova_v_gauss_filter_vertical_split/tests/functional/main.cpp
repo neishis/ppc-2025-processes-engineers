@@ -20,7 +20,7 @@
 
 namespace kondrashova_v_gauss_filter_vertical_split {
 
-class NesterovARunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
+class KondrashovaVRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
     return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
@@ -65,21 +65,21 @@ class NesterovARunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType
 
 namespace {
 
-TEST_P(NesterovARunFuncTestsProcesses, MatmulFromPic) {
+TEST_P(KondrashovaVRunFuncTestsProcesses, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
 const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
 
 const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<NesterovATestTaskMPI, InType>(kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split),
-                   ppc::util::AddFuncTask<NesterovATestTaskSEQ, InType>(kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split));
+    std::tuple_cat(ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitMPI, InType>(kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split),
+                   ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitSEQ, InType>(kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kPerfTestName = NesterovARunFuncTestsProcesses::PrintFuncTestName<NesterovARunFuncTestsProcesses>;
+const auto kPerfTestName = KondrashovaVRunFuncTestsProcesses::PrintFuncTestName<KondrashovaVRunFuncTestsProcesses>;
 
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, NesterovARunFuncTestsProcesses, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(PicMatrixTests, KondrashovaVRunFuncTestsProcesses, kGtestValues, kPerfTestName);
 
 }  // namespace
 

@@ -5,12 +5,12 @@
 
 namespace kondrashova_v_gauss_filter_vertical_split {
 
-class NesterovATestTaskMPI : public BaseTask {
+class KondrashovaVGaussFilterVerticalSplitMPI : public BaseTask {
  public:
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kMPI;
   }
-  explicit NesterovATestTaskMPI(const InType &in);
+  explicit KondrashovaVGaussFilterVerticalSplitMPI(const InType &in);
 
  private:
   bool ValidationImpl() override;

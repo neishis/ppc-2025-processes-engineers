@@ -7,7 +7,7 @@
 
 namespace kondrashova_v_gauss_filter_vertical_split {
 
-class ExampleRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
+class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
   const int kCount_ = 100;
   InType input_data_{};
 
@@ -24,17 +24,17 @@ class ExampleRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, O
   }
 };
 
-TEST_P(ExampleRunPerfTestProcesses, RunPerfModes) {
+TEST_P(KondrashovaVRunPerfTestProcesses, RunPerfModes) {
   ExecuteTest(GetParam());
 }
 
 const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, NesterovATestTaskMPI, NesterovATestTaskSEQ>(PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split);
+    ppc::util::MakeAllPerfTasks<InType, KondrashovaVGaussFilterVerticalSplitMPI, KondrashovaVGaussFilterVerticalSplitSEQ>(PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
-const auto kPerfTestName = ExampleRunPerfTestProcesses::CustomPerfTestName;
+const auto kPerfTestName = KondrashovaVRunPerfTestProcesses::CustomPerfTestName;
 
-INSTANTIATE_TEST_SUITE_P(RunModeTests, ExampleRunPerfTestProcesses, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(RunModeTests, KondrashovaVRunPerfTestProcesses, kGtestValues, kPerfTestName);
 
 }  // namespace kondrashova_v_gauss_filter_vertical_split

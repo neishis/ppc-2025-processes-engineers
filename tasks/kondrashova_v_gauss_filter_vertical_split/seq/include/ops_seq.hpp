@@ -5,12 +5,12 @@
 
 namespace kondrashova_v_gauss_filter_vertical_split {
 
-class NesterovATestTaskSEQ : public BaseTask {
+class KondrashovaVGaussFilterVerticalSplitSEQ : public BaseTask {
  public:
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kSEQ;
   }
-  explicit NesterovATestTaskSEQ(const InType &in);
+  explicit KondrashovaVGaussFilterVerticalSplitSEQ(const InType &in);
 
  private:
   bool ValidationImpl() override;
