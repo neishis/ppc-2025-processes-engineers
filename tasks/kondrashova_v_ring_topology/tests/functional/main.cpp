@@ -26,29 +26,52 @@ class KondrashovaVRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InT
 
  protected:
   void SetUp() override {
-    int world_size = 0;
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-
     TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
 
     int source = std::get<0>(params);
     int recipient = std::get<1>(params);
     std::vector<int> data = std::get<2>(params);
 
-    input_data_.source = source % world_size;
-    input_data_.recipient = recipient % world_size;
+    input_data_.source = source;
+    input_data_.recipient = recipient;
     input_data_.data = data;
     expected_output_ = data;
+
+    int mpi_initialized = 0;
+    MPI_Initialized(&mpi_initialized);
+    if (mpi_initialized != 0) {
+      int world_size = 0;
+      MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+      input_data_.source = source % world_size;
+      input_data_.recipient = recipient % world_size;
+    }
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    int rank = 0;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    int mpi_initialized = 0;
+    MPI_Initialized(&mpi_initialized);
 
-    if (rank == input_data_.recipient) {
-      return (output_data == expected_output_);
+    if (mpi_initialized != 0) {
+      int world_size = 0;
+      int rank = 0;
+      MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+      // SEQ-режим (один процесс)
+      if (world_size == 1) {
+        return output_data == expected_output_;
+      }
+
+      // MPI: проверяем только на получателе
+      if (rank == input_data_.recipient) {
+        return output_data == expected_output_;
+      }
+
+      return true;
     }
-    return true;
+
+    // Без MPI
+    return output_data == expected_output_;
   }
 
   InType GetTestInputData() final {

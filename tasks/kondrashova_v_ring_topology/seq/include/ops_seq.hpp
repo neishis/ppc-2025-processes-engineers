@@ -19,15 +19,7 @@ class KondrashovaVRingTopologySEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  InType &GetInput() {
-    return input_;
-  }
-  OutType &GetOutput() {
-    return output_;
-  }
-
-  InType input_;
-  OutType output_;
+  std::vector<int> result_;
 };
 
 }  // namespace kondrashova_v_ring_topology
