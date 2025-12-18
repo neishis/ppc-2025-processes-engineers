@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 
 #include "kondrashova_v_ring_topology/common/include/common.hpp"
 #include "task/include/task.hpp"
