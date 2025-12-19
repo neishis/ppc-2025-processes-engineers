@@ -47,9 +47,13 @@ class KondrashovaVRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InT
     expected_output_ = seq_task.GetOutput();
   }
 
-  bool CheckTestOutputData(OutType &output_data) final { return output_data == expected_output_; }
+  bool CheckTestOutputData(OutType &output_data) final {
+    return output_data == expected_output_;
+  }
 
-  InType GetTestInputData() final { return input_data_; }
+  InType GetTestInputData() final {
+    return input_data_;
+  }
 
  private:
   InType input_data_;
@@ -58,19 +62,17 @@ class KondrashovaVRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InT
 
 namespace {
 
-TEST_P(KondrashovaVRunFuncTestsProcesses, GaussFilterGenerated) { ExecuteTest(GetParam()); }
+TEST_P(KondrashovaVRunFuncTestsProcesses, GaussFilterGenerated) {
+  ExecuteTest(GetParam());
+}
 
-const std::array<TestType, 3> kTestParam = {
-    std::make_tuple(3, "small_3x3"), 
-    std::make_tuple(50, "medium_50x50"),
-    std::make_tuple(100, "large_100x100")
-};
+const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "small_3x3"), std::make_tuple(50, "medium_50x50"),
+                                            std::make_tuple(100, "large_100x100")};
 
-const auto kTestTasksList = std::tuple_cat(
-    ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitMPI, InType>(
-        kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split),
-    ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitSEQ, InType>(
-        kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split));
+const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitMPI, InType>(
+                                               kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split),
+                                           ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitSEQ, InType>(
+                                               kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 

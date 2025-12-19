@@ -13,7 +13,6 @@
 namespace kondrashova_v_gauss_filter_vertical_split {
 
 class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  
   static const int kWidth = 3840;
   static const int kHeight = 2160;
   static const int kChannels = 3;
@@ -30,7 +29,7 @@ class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InTy
     std::mt19937 gen(12345);
     std::uniform_int_distribution<int> dist(0, 255);
 
-    for (auto& pixel : input_data_.pixels) {
+    for (auto &pixel : input_data_.pixels) {
       pixel = static_cast<uint8_t>(dist(gen));
     }
 
@@ -41,23 +40,22 @@ class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InTy
     expected_output_ = seq_task.GetOutput();
   }
 
-  bool CheckTestOutputData(OutType& output_data) final { 
-    return output_data == expected_output_; 
+  bool CheckTestOutputData(OutType &output_data) final {
+    return output_data == expected_output_;
   }
 
-  InType GetTestInputData() final { 
-    return input_data_; 
+  InType GetTestInputData() final {
+    return input_data_;
   }
 };
 
-TEST_P(KondrashovaVRunPerfTestProcesses, RunPerfModes) { 
-  ExecuteTest(GetParam()); 
+TEST_P(KondrashovaVRunPerfTestProcesses, RunPerfModes) {
+  ExecuteTest(GetParam());
 }
 
-const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, KondrashovaVGaussFilterVerticalSplitMPI, 
-                                 KondrashovaVGaussFilterVerticalSplitSEQ>(
-        PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split);
+const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, KondrashovaVGaussFilterVerticalSplitMPI,
+                                                       KondrashovaVGaussFilterVerticalSplitSEQ>(
+    PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 

@@ -15,9 +15,8 @@ struct ImageData {
   int height{0};
   int channels{1};
 
-  bool operator==(const ImageData& other) const {
-    return width == other.width && height == other.height && 
-           channels == other.channels && pixels == other.pixels;
+  bool operator==(const ImageData &other) const {
+    return width == other.width && height == other.height && channels == other.channels && pixels == other.pixels;
   }
 };
 
