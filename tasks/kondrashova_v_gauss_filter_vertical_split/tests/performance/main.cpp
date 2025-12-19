@@ -1,5 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <cstdint>
+#include <random>
+#include <stdexcept>
+#include <vector>
+
 #include "kondrashova_v_gauss_filter_vertical_split/common/include/common.hpp"
 #include "kondrashova_v_gauss_filter_vertical_split/mpi/include/ops_mpi.hpp"
 #include "kondrashova_v_gauss_filter_vertical_split/seq/include/ops_seq.hpp"
@@ -8,28 +13,51 @@
 namespace kondrashova_v_gauss_filter_vertical_split {
 
 class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 100;
-  InType input_data_{};
+  
+  static const int kWidth = 3840;
+  static const int kHeight = 2160;
+  static const int kChannels = 3;
+
+  InType input_data_;
+  OutType expected_output_;
 
   void SetUp() override {
-    input_data_ = kCount_;
+    input_data_.width = kWidth;
+    input_data_.height = kHeight;
+    input_data_.channels = kChannels;
+    input_data_.pixels.resize(static_cast<size_t>(kWidth) * kHeight * kChannels);
+
+    std::mt19937 gen(12345);
+    std::uniform_int_distribution<int> dist(0, 255);
+
+    for (auto& pixel : input_data_.pixels) {
+      pixel = static_cast<uint8_t>(dist(gen));
+    }
+
+    KondrashovaVGaussFilterVerticalSplitSEQ seq_task(input_data_);
+    if (!seq_task.Validation() || !seq_task.PreProcessing() || !seq_task.Run() || !seq_task.PostProcessing()) {
+      throw std::runtime_error("Failed to compute reference result");
+    }
+    expected_output_ = seq_task.GetOutput();
   }
 
-  bool CheckTestOutputData(OutType &output_data) final {
-    return input_data_ == output_data;
+  bool CheckTestOutputData(OutType& output_data) final { 
+    return output_data == expected_output_; 
   }
 
-  InType GetTestInputData() final {
-    return input_data_;
+  InType GetTestInputData() final { 
+    return input_data_; 
   }
 };
 
-TEST_P(KondrashovaVRunPerfTestProcesses, RunPerfModes) {
-  ExecuteTest(GetParam());
+TEST_P(KondrashovaVRunPerfTestProcesses, RunPerfModes) { 
+  ExecuteTest(GetParam()); 
 }
 
 const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, KondrashovaVGaussFilterVerticalSplitMPI, KondrashovaVGaussFilterVerticalSplitSEQ>(PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split);
+    ppc::util::MakeAllPerfTasks<InType, KondrashovaVGaussFilterVerticalSplitMPI, 
+                                 KondrashovaVGaussFilterVerticalSplitSEQ>(
+        PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 

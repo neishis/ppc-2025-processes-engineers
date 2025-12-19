@@ -1,15 +1,12 @@
 #include <gtest/gtest.h>
-#include <stb/stb_image.h>
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <numeric>
+#include <random>
 #include <stdexcept>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "kondrashova_v_gauss_filter_vertical_split/common/include/common.hpp"
@@ -28,58 +25,58 @@ class KondrashovaVRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InT
 
  protected:
   void SetUp() override {
-    int width = -1;
-    int height = -1;
-    int channels = -1;
-    std::vector<uint8_t> img;
-    // Read image in RGB to ensure consistent channel count
-    {
-      std::string abs_path = ppc::util::GetAbsoluteTaskPath(PPC_ID_kondrashova_v_gauss_filter_vertical_split, "pic.jpg");
-      auto *data = stbi_load(abs_path.c_str(), &width, &height, &channels, STBI_rgb);
-      if (data == nullptr) {
-        throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
-      }
-      channels = STBI_rgb;
-      img = std::vector<uint8_t>(data, data + (static_cast<ptrdiff_t>(width * height * channels)));
-      stbi_image_free(data);
-      if (std::cmp_not_equal(width, height)) {
-        throw std::runtime_error("width != height: ");
-      }
+    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    int size = std::get<0>(params);
+
+    input_data_.width = size;
+    input_data_.height = size;
+    input_data_.channels = 3;
+    input_data_.pixels.resize(static_cast<size_t>(size * size * 3));
+
+    std::mt19937 gen(42);
+    std::uniform_int_distribution<int> dist(0, 255);
+
+    for (auto &pixel : input_data_.pixels) {
+      pixel = static_cast<uint8_t>(dist(gen));
     }
 
-    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_ = width - height + std::min(std::accumulate(img.begin(), img.end(), 0), channels);
+    KondrashovaVGaussFilterVerticalSplitSEQ seq_task(input_data_);
+    if (!seq_task.Validation() || !seq_task.PreProcessing() || !seq_task.Run() || !seq_task.PostProcessing()) {
+      throw std::runtime_error("Failed to compute reference result with SEQ version");
+    }
+    expected_output_ = seq_task.GetOutput();
   }
 
-  bool CheckTestOutputData(OutType &output_data) final {
-    return (input_data_ == output_data);
-  }
+  bool CheckTestOutputData(OutType &output_data) final { return output_data == expected_output_; }
 
-  InType GetTestInputData() final {
-    return input_data_;
-  }
+  InType GetTestInputData() final { return input_data_; }
 
  private:
-  InType input_data_ = 0;
+  InType input_data_;
+  OutType expected_output_;
 };
 
 namespace {
 
-TEST_P(KondrashovaVRunFuncTestsProcesses, MatmulFromPic) {
-  ExecuteTest(GetParam());
-}
+TEST_P(KondrashovaVRunFuncTestsProcesses, GaussFilterGenerated) { ExecuteTest(GetParam()); }
 
-const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
+const std::array<TestType, 3> kTestParam = {
+    std::make_tuple(3, "small_3x3"), 
+    std::make_tuple(50, "medium_50x50"),
+    std::make_tuple(100, "large_100x100")
+};
 
-const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitMPI, InType>(kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split),
-                   ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitSEQ, InType>(kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split));
+const auto kTestTasksList = std::tuple_cat(
+    ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitMPI, InType>(
+        kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split),
+    ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitSEQ, InType>(
+        kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
 const auto kPerfTestName = KondrashovaVRunFuncTestsProcesses::PrintFuncTestName<KondrashovaVRunFuncTestsProcesses>;
 
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, KondrashovaVRunFuncTestsProcesses, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(GaussFilterTests, KondrashovaVRunFuncTestsProcesses, kGtestValues, kPerfTestName);
 
 }  // namespace
 
