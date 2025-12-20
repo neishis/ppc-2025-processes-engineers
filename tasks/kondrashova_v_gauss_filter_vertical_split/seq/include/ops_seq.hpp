@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -22,11 +23,11 @@ class KondrashovaVGaussFilterVerticalSplitSEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  static const int kGaussKernel[3][3];
-  static const int kGaussKernelSum = 16;
+  static const std::array<std::array<int, 3>, 3> kGaussKernel;
+  static const int kGaussKernelSum;
 
-  uint8_t ApplyGaussToPixel(const std::vector<uint8_t> &pixels, int width, int height, int channels, int x, int y,
-                            int channel) const;
+  [[nodiscard]] static uint8_t ApplyGaussToPixel(const std::vector<uint8_t> &pixels, int width, int height,
+                                                 int channels, int px, int py, int channel);
 };
 
 }  // namespace kondrashova_v_gauss_filter_vertical_split

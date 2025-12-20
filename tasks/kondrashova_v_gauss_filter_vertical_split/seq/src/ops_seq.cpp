@@ -1,28 +1,31 @@
 #include "kondrashova_v_gauss_filter_vertical_split/seq/include/ops_seq.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
 #include "kondrashova_v_gauss_filter_vertical_split/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace kondrashova_v_gauss_filter_vertical_split {
 
-const int KondrashovaVGaussFilterVerticalSplitSEQ::kGaussKernel[3][3] = {{1, 2, 1}, {2, 4, 2}, {1, 2, 1}};
+const std::array<std::array<int, 3>, 3> KondrashovaVGaussFilterVerticalSplitSEQ::kGaussKernel = {
+    {{{1, 2, 1}}, {{2, 4, 2}}, {{1, 2, 1}}}};
+const int KondrashovaVGaussFilterVerticalSplitSEQ::kGaussKernelSum = 16;
 
 uint8_t KondrashovaVGaussFilterVerticalSplitSEQ::ApplyGaussToPixel(const std::vector<uint8_t> &pixels, int width,
-                                                                   int height, int channels, int x, int y,
-                                                                   int channel) const {
+                                                                   int height, int channels, int px, int py,
+                                                                   int channel) {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {
     for (int kx = -1; kx <= 1; ++kx) {
-      int px = std::clamp(x + kx, 0, width - 1);
-      int py = std::clamp(y + ky, 0, height - 1);
+      int nx = std::clamp(px + kx, 0, width - 1);
+      int ny = std::clamp(py + ky, 0, height - 1);
 
-      int idx = (py * width + px) * channels + channel;
-      sum += pixels[idx] * kGaussKernel[ky + 1][kx + 1];
+      int idx = (((ny * width) + nx) * channels) + channel;
+      sum += pixels[idx] * kGaussKernel[static_cast<size_t>(ky + 1)][static_cast<size_t>(kx + 1)];
     }
   }
 
@@ -45,7 +48,7 @@ bool KondrashovaVGaussFilterVerticalSplitSEQ::ValidationImpl() {
     return false;
   }
 
-  size_t expected_size = static_cast<size_t>(input.width * input.height * input.channels);
+  auto expected_size = static_cast<size_t>(input.width) * input.height * input.channels;
   return input.pixels.size() == expected_size;
 }
 
@@ -69,11 +72,11 @@ bool KondrashovaVGaussFilterVerticalSplitSEQ::RunImpl() {
   int height = input.height;
   int channels = input.channels;
 
-  for (int y = 0; y < height; ++y) {
-    for (int x = 0; x < width; ++x) {
-      for (int c = 0; c < channels; ++c) {
-        int idx = (y * width + x) * channels + c;
-        output.pixels[idx] = ApplyGaussToPixel(input.pixels, width, height, channels, x, y, c);
+  for (int row = 0; row < height; ++row) {
+    for (int col = 0; col < width; ++col) {
+      for (int ch = 0; ch < channels; ++ch) {
+        int idx = (((row * width) + col) * channels) + ch;
+        output.pixels[idx] = ApplyGaussToPixel(input.pixels, width, height, channels, col, row, ch);
       }
     }
   }

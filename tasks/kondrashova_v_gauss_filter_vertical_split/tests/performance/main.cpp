@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
+#include <mpi.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <random>
 #include <stdexcept>
@@ -26,7 +28,17 @@ class KondrashovaVRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InTy
     input_data_.channels = kChannels;
     input_data_.pixels.resize(static_cast<size_t>(kWidth) * kHeight * kChannels);
 
-    std::mt19937 gen(12345);
+    int rank = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    unsigned int seed = 0;
+    if (rank == 0) {
+      std::random_device rd;
+      seed = rd();
+    }
+    MPI_Bcast(&seed, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+
+    std::mt19937 gen(seed);
     std::uniform_int_distribution<int> dist(0, 255);
 
     for (auto &pixel : input_data_.pixels) {

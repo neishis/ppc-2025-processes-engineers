@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -22,8 +23,8 @@ class KondrashovaVGaussFilterVerticalSplitMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  static const int kGaussKernel[3][3];
-  static const int kGaussKernelSum = 16;
+  static const std::array<std::array<int, 3>, 3> kGaussKernel;
+  static const int kGaussKernelSum;
 
   void BroadcastImageDimensions(int &width, int &height, int &channels);
 
@@ -41,8 +42,8 @@ class KondrashovaVGaussFilterVerticalSplitMPI : public BaseTask {
 
   void BroadcastResultToAllProcesses(int width, int height, int channels);
 
-  uint8_t ApplyGaussToLocalPixel(const std::vector<uint8_t> &local_data, int local_width, int height, int channels,
-                                 int x, int y, int channel) const;
+  [[nodiscard]] uint8_t ApplyGaussToLocalPixel(const std::vector<uint8_t> &local_data, int local_width, int height,
+                                               int channels, int x, int y, int channel) const;
 };
 
 }  // namespace kondrashova_v_gauss_filter_vertical_split
