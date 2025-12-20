@@ -18,6 +18,30 @@
 
 namespace kondrashova_v_gauss_filter_vertical_split {
 
+namespace {
+
+unsigned int GetSynchronizedSeed() {
+  std::random_device rd;
+  unsigned int seed = rd();
+
+  int mpi_initialized = 0;
+  MPI_Initialized(&mpi_initialized);
+
+  if (mpi_initialized != 0) {
+    int rank = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (rank != 0) {
+      seed = 0;
+    }
+    MPI_Bcast(&seed, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+  }
+
+  return seed;
+}
+
+}  // namespace
+
 class KondrashovaVRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
@@ -34,16 +58,7 @@ class KondrashovaVRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InT
     input_data_.channels = 3;
     input_data_.pixels.resize(static_cast<size_t>(size) * size * 3);
 
-    int rank = 0;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    unsigned int seed = 0;
-    if (rank == 0) {
-      std::random_device rd;
-      seed = rd();
-    }
-    MPI_Bcast(&seed, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-
+    unsigned int seed = GetSynchronizedSeed();
     std::mt19937 gen(seed);
     std::uniform_int_distribution<int> dist(0, 255);
 
@@ -77,11 +92,8 @@ TEST_P(KondrashovaVRunFuncTestsProcesses, GaussFilterGenerated) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 3> kTestParam = {
-    std::make_tuple(10, "small_10x10"),
-    std::make_tuple(50, "medium_50x50"),
-    std::make_tuple(100, "large_100x100"),
-};
+const std::array<TestType, 3> kTestParam = {std::make_tuple(10, "small_10x10"), std::make_tuple(50, "medium_50x50"),
+                                            std::make_tuple(100, "large_100x100")};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<KondrashovaVGaussFilterVerticalSplitMPI, InType>(
                                                kTestParam, PPC_SETTINGS_kondrashova_v_gauss_filter_vertical_split),
