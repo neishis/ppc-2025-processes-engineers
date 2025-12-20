@@ -78,7 +78,7 @@ TEST_P(KondrashovaVRunFuncTestsProcesses, GaussFilterGenerated) {
 }
 
 const std::array<TestType, 3> kTestParam = {
-    std::make_tuple(3, "small_3x3"),
+    std::make_tuple(10, "small_10x10"),
     std::make_tuple(50, "medium_50x50"),
     std::make_tuple(100, "large_100x100"),
 };

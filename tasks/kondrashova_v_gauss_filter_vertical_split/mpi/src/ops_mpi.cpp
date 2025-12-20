@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -22,16 +23,18 @@ KondrashovaVGaussFilterVerticalSplitMPI::KondrashovaVGaussFilterVerticalSplitMPI
 
 uint8_t KondrashovaVGaussFilterVerticalSplitMPI::ApplyGaussToLocalPixel(const std::vector<uint8_t> &local_data,
                                                                         int local_width, int height, int channels,
-                                                                        int x, int y, int channel) const {
+                                                                        int px, int py, int channel) {
   int sum = 0;
 
   for (int ky = -1; ky <= 1; ++ky) {
     for (int kx = -1; kx <= 1; ++kx) {
-      int px = std::clamp(x + kx, 0, local_width - 1);
-      int py = std::clamp(y + ky, 0, height - 1);
+      int nx = std::clamp(px + kx, 0, local_width - 1);
+      int ny = std::clamp(py + ky, 0, height - 1);
 
-      int idx = ((py * local_width) + px) * channels + channel;
-      sum += local_data[idx] * kGaussKernel[ky + 1][kx + 1];
+      int idx = (((ny * local_width) + nx) * channels) + channel;
+      auto kernel_row = static_cast<size_t>(ky) + 1;
+      auto kernel_col = static_cast<size_t>(kx) + 1;
+      sum += local_data[idx] * kGaussKernel.at(kernel_row).at(kernel_col);
     }
   }
 
@@ -104,6 +107,36 @@ void KondrashovaVGaussFilterVerticalSplitMPI::CalculateColumnDistribution(int wi
   }
 }
 
+void KondrashovaVGaussFilterVerticalSplitMPI::CopyPixelsToBuffer(const std::vector<uint8_t> &src,
+                                                                 std::vector<uint8_t> &dst, int src_width,
+                                                                 int dst_width, int height, int channels,
+                                                                 int src_start_col) {
+  for (int row = 0; row < height; ++row) {
+    for (int col = 0; col < dst_width; ++col) {
+      for (int ch = 0; ch < channels; ++ch) {
+        int src_idx = (((row * src_width) + (src_start_col + col)) * channels) + ch;
+        int dst_idx = (((row * dst_width) + col) * channels) + ch;
+        dst[dst_idx] = src[src_idx];
+      }
+    }
+  }
+}
+
+void KondrashovaVGaussFilterVerticalSplitMPI::CopyBufferToOutput(const std::vector<uint8_t> &src,
+                                                                 std::vector<uint8_t> &dst, int src_width,
+                                                                 int dst_width, int height, int channels,
+                                                                 int dst_start_col) {
+  for (int row = 0; row < height; ++row) {
+    for (int col = 0; col < src_width; ++col) {
+      for (int ch = 0; ch < channels; ++ch) {
+        int src_idx = (((row * src_width) + col) * channels) + ch;
+        int dst_idx = (((row * dst_width) + (dst_start_col + col)) * channels) + ch;
+        dst[dst_idx] = src[src_idx];
+      }
+    }
+  }
+}
+
 void KondrashovaVGaussFilterVerticalSplitMPI::DistributeImageData(int rank, int size, int width, int height,
                                                                   int channels, const std::vector<int> &col_counts,
                                                                   const std::vector<int> &col_offsets,
@@ -119,16 +152,7 @@ void KondrashovaVGaussFilterVerticalSplitMPI::DistributeImageData(int rank, int 
       int p_cols = p_end - p_start;
 
       std::vector<uint8_t> send_data(static_cast<size_t>(p_cols) * height * channels);
-
-      for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < p_cols; ++col) {
-          for (int ch = 0; ch < channels; ++ch) {
-            int src_idx = (((row * width) + (p_start + col)) * channels) + ch;
-            int dst_idx = (((row * p_cols) + col) * channels) + ch;
-            send_data[dst_idx] = input_pixels[src_idx];
-          }
-        }
-      }
+      CopyPixelsToBuffer(input_pixels, send_data, width, p_cols, height, channels, p_start);
 
       if (proc == 0) {
         local_data = send_data;
@@ -166,15 +190,7 @@ void KondrashovaVGaussFilterVerticalSplitMPI::GatherResults(int rank, int size, 
   if (rank == 0) {
     auto &output_pixels = GetOutput().pixels;
 
-    for (int row = 0; row < height; ++row) {
-      for (int col = 0; col < local_cols; ++col) {
-        for (int ch = 0; ch < channels; ++ch) {
-          int src_idx = (((row * local_cols) + col) * channels) + ch;
-          int dst_idx = (((row * width) + (local_start_col + col)) * channels) + ch;
-          output_pixels[dst_idx] = local_result[src_idx];
-        }
-      }
-    }
+    CopyBufferToOutput(local_result, output_pixels, local_cols, width, height, channels, local_start_col);
 
     for (int proc = 1; proc < size; ++proc) {
       int p_cols = col_counts[proc];
@@ -182,15 +198,7 @@ void KondrashovaVGaussFilterVerticalSplitMPI::GatherResults(int rank, int size, 
       MPI_Status status;
       MPI_Recv(recv_data.data(), static_cast<int>(recv_data.size()), MPI_BYTE, proc, 1, MPI_COMM_WORLD, &status);
 
-      for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < p_cols; ++col) {
-          for (int ch = 0; ch < channels; ++ch) {
-            int src_idx = (((row * p_cols) + col) * channels) + ch;
-            int dst_idx = (((row * width) + (col_offsets[proc] + col)) * channels) + ch;
-            output_pixels[dst_idx] = recv_data[src_idx];
-          }
-        }
-      }
+      CopyBufferToOutput(recv_data, output_pixels, p_cols, width, height, channels, col_offsets[proc]);
     }
   } else {
     MPI_Send(local_result.data(), static_cast<int>(local_result.size()), MPI_BYTE, 0, 1, MPI_COMM_WORLD);

@@ -25,7 +25,9 @@ uint8_t KondrashovaVGaussFilterVerticalSplitSEQ::ApplyGaussToPixel(const std::ve
       int ny = std::clamp(py + ky, 0, height - 1);
 
       int idx = (((ny * width) + nx) * channels) + channel;
-      sum += pixels[idx] * kGaussKernel[static_cast<size_t>(ky + 1)][static_cast<size_t>(kx + 1)];
+      auto kernel_row = static_cast<size_t>(ky) + 1;
+      auto kernel_col = static_cast<size_t>(kx) + 1;
+      sum += pixels[idx] * kGaussKernel.at(kernel_row).at(kernel_col);
     }
   }
 
