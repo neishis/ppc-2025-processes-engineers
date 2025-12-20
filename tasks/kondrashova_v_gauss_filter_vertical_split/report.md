@@ -136,56 +136,53 @@ bool KondrashovaVGaussFilterVerticalSplitMPI::RunImpl() {
   int size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  
+
   int width = 0;
   int height = 0;
   int channels = 0;
   BroadcastImageDimensions(width, height, channels);
-  
+
   std::vector<int> col_counts;
   std::vector<int> col_offsets;
   CalculateColumnDistribution(width, size, col_counts, col_offsets);
-  
+
   int local_start_col = col_offsets[rank];
   int local_cols = col_counts[rank];
-  
+
   int extended_start = std::max(0, local_start_col - 1);
   int extended_end = std::min(width, local_start_col + local_cols + 1);
   int extended_cols = extended_end - extended_start;
   int offset_in_extended = local_start_col - extended_start;
-  
+
   std::vector<uint8_t> local_data;
-  DistributeImageData(rank, size, width, height, channels,
-                      col_counts, col_offsets, local_data, extended_cols);
-  
+  DistributeImageData(rank, size, width, height, channels, col_counts, col_offsets, local_data, extended_cols);
+
   std::vector<uint8_t> local_result;
-  ApplyGaussFilterToLocalData(local_data, local_result, extended_cols, 
-                               local_cols, height, channels, offset_in_extended);
-  
-  GatherResults(rank, size, width, height, channels,
-                col_counts, col_offsets, local_start_col, 
-                local_cols, local_result);
-  
+  ApplyGaussFilterToLocalData(local_data, local_result, extended_cols, local_cols, height, channels,
+                              offset_in_extended);
+
+  GatherResults(rank, size, width, height, channels, col_counts, col_offsets, local_start_col, local_cols,
+                local_result);
+
   BroadcastResultToAllProcesses(width, height, channels);
-  
+
   return true;
 }
 
-uint8_t KondrashovaVGaussFilterVerticalSplitMPI::ApplyGaussToLocalPixel(
-    const std::vector<uint8_t>& local_data, int local_width, int height,
-    int channels, int x, int y, int channel) const {
-  int sum = 0;
-  
-  for (int ky = -1; ky <= 1; ++ky) {
-    for (int kx = -1; kx <= 1; ++kx) {
-      int px = std::clamp(x + kx, 0, local_width - 1);
-      int py = std::clamp(y + ky, 0, height - 1);
-      
-      int idx = (py * local_width + px) * channels + channel;
-      sum += local_data[idx] * kGaussKernel[ky + 1][kx + 1];
+void KondrashovaVGaussFilterVerticalSplitMPI::ApplyGaussFilterToLocalData(const std::vector<uint8_t> &local_data,
+                                                                          std::vector<uint8_t> &local_result,
+                                                                          int extended_cols, int local_cols, int height,
+                                                                          int channels, int offset_in_extended) {
+  local_result.resize(static_cast<size_t>(local_cols) * height * channels);
+
+  for (int row = 0; row < height; ++row) {
+    for (int lx = 0; lx < local_cols; ++lx) {
+      int col = offset_in_extended + lx;
+      for (int ch = 0; ch < channels; ++ch) {
+        int result_idx = (((row * local_cols) + lx) * channels) + ch;
+        local_result[result_idx] = ApplyGaussToLocalPixel(local_data, extended_cols, height, channels, col, row, ch);
+      }
     }
   }
-  
-  return static_cast<uint8_t>(std::clamp(sum / kGaussKernelSum, 0, 255));
 }
 ```
