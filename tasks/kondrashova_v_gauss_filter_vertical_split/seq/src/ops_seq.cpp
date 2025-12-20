@@ -42,16 +42,9 @@ KondrashovaVGaussFilterVerticalSplitSEQ::KondrashovaVGaussFilterVerticalSplitSEQ
 bool KondrashovaVGaussFilterVerticalSplitSEQ::ValidationImpl() {
   const auto &input = GetInput();
 
-  if (input.width < 3 || input.height < 3) {
-    return false;
-  }
-
-  if (input.channels < 1 || input.channels > 4) {
-    return false;
-  }
-
   auto expected_size = static_cast<size_t>(input.width) * input.height * input.channels;
-  return input.pixels.size() == expected_size;
+  return input.pixels.size() == expected_size && input.width >= 3 && input.height >= 3 && input.channels >= 1 &&
+         input.channels <= 4;
 }
 
 bool KondrashovaVGaussFilterVerticalSplitSEQ::PreProcessingImpl() {
